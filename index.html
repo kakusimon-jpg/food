@@ -12,16 +12,9 @@
             font-family: 'Noto Sans SC', sans-serif; 
             -webkit-tap-highlight-color: transparent;
         }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { 
-            -ms-overflow-style: none; 
-            scrollbar-width: none; 
-            -webkit-overflow-scrolling: touch;
-        }
         .loader { border-top-color: #f97316; animation: spinner 1.5s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* 优化 iOS 点击效果 */
         button:active { transform: scale(0.98); }
     </style>
 </head>
@@ -35,24 +28,26 @@
                     <h1 class="text-xl font-bold flex items-center gap-2">
                         <i data-lucide="utensils" class="w-5 h-5"></i> 今日食谱
                     </h1>
-                    <div class="flex gap-1 bg-white/20 p-1 rounded-lg text-[10px]">
-                        <button onclick="setMode('search')" id="btn-mode-search" class="px-2.5 py-1.5 rounded-md transition-all bg-white text-orange-600 shadow-sm font-bold">主料搜索</button>
-                        <button onclick="setMode('daily')" id="btn-mode-daily" class="px-2.5 py-1.5 rounded-md transition-all text-white font-bold">全天计划</button>
+                    <div class="flex gap-1 bg-white/20 p-1 rounded-lg text-[9px]">
+                        <button onclick="setMode('search')" id="btn-mode-search" class="px-2 py-1.5 rounded-md transition-all bg-white text-orange-600 shadow-sm font-bold text-center">主料搜索</button>
+                        <button onclick="setMode('daily')" id="btn-mode-daily" class="px-2 py-1.5 rounded-md transition-all text-white font-bold text-center">全天计划</button>
+                        <button onclick="setMode('soup')" id="btn-mode-soup" class="px-2 py-1.5 rounded-md transition-all text-white font-bold text-center">滋补煲汤</button>
                     </div>
                 </div>
 
                 <!-- Mode: Search -->
                 <div id="section-search" class="space-y-4">
-                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar" id="cuisine-bar">
-                        <i data-lucide="globe" class="w-4 h-4 flex-shrink-0 opacity-70"></i>
-                        <div class="flex gap-2 flex-nowrap" id="cuisine-list">
+                    <div class="space-y-2">
+                        <p class="text-[10px] font-bold opacity-80 flex items-center gap-1 uppercase tracking-wider">
+                            <i data-lucide="globe" class="w-3 h-3"></i> 菜系选择
+                        </p>
+                        <div class="flex flex-wrap gap-2" id="cuisine-list">
                             <!-- JS 注入 -->
                         </div>
                     </div>
-                    <!-- 优化后的搜索框容器 -->
-                    <div class="flex items-center gap-2 bg-white rounded-full p-1 shadow-md border border-orange-100 w-full max-w-full overflow-hidden">
-                        <input type="text" id="input-ingredient" placeholder="想吃什么？如：鸡、鱼..." class="flex-1 min-w-0 px-3 py-2 rounded-full text-slate-800 outline-none text-sm sm:text-base">
-                        <button onclick="getRecipeList()" class="bg-orange-600 w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full hover:bg-orange-700 active:bg-orange-800 transition-colors shadow-sm">
+                    <div class="flex items-center gap-2 bg-white rounded-full p-1 shadow-md border border-orange-100 w-full">
+                        <input type="text" id="input-ingredient" placeholder="想吃什么主料？" class="flex-1 min-w-0 px-3 py-2 rounded-full text-slate-800 outline-none text-sm">
+                        <button onclick="getRecipeList()" class="bg-orange-600 w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full shadow-sm">
                             <i data-lucide="search" class="w-5 h-5 text-white"></i>
                         </button>
                     </div>
@@ -60,12 +55,36 @@
 
                 <!-- Mode: Daily -->
                 <div id="section-daily" class="hidden space-y-4">
-                    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1" id="dietary-list">
-                        <!-- JS 注入 -->
+                    <div class="space-y-2">
+                        <p class="text-[10px] font-bold opacity-80 flex items-center gap-1 uppercase tracking-wider">
+                            <i data-lucide="calendar" class="w-3 h-3"></i> 饮食目标
+                        </p>
+                        <div class="flex flex-wrap gap-2" id="dietary-list">
+                            <!-- JS 注入 -->
+                        </div>
                     </div>
-                    <button onclick="getDailyPlan()" class="w-full bg-white text-orange-600 font-black py-3.5 rounded-2xl shadow-lg flex items-center justify-center gap-2 hover:bg-orange-50 active:bg-orange-100 transition-all">
+                    <button onclick="getDailyPlan()" class="w-full bg-white text-orange-600 font-black py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2">
                         <i data-lucide="sparkles" class="w-5 h-5"></i>
-                        <span id="daily-btn-text text-sm">一键生成全天方案</span>
+                        <span id="daily-btn-text">生成今日方案</span>
+                    </button>
+                </div>
+
+                <!-- Mode: Soup -->
+                <div id="section-soup" class="hidden space-y-4">
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <p class="text-[10px] font-bold opacity-80 flex items-center gap-1 uppercase tracking-wider">
+                                <i data-lucide="flame" class="w-3 h-3"></i> 广东老火靓汤 / 滋补调理
+                            </p>
+                            <span id="seasonal-badge" class="text-[9px] bg-white text-orange-600 px-2 py-0.5 rounded font-black"></span>
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="soup-list">
+                            <!-- JS 注入 -->
+                        </div>
+                    </div>
+                    <button id="soup-generate-btn" class="w-full bg-white text-orange-600 font-black py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="droplet" class="w-5 h-5"></i>
+                        <span>搜索滋补汤谱</span>
                     </button>
                 </div>
             </div>
@@ -77,7 +96,7 @@
                 </button>
                 <div class="overflow-hidden">
                     <h1 id="detail-title" class="text-lg font-bold truncate">菜名</h1>
-                    <p id="detail-subtitle" class="text-[10px] opacity-80 uppercase tracking-tighter">风格</p>
+                    <p id="detail-subtitle" class="text-[10px] opacity-80 uppercase tracking-tighter"></p>
                 </div>
             </div>
         </div>
@@ -85,7 +104,7 @@
 
     <main class="max-w-4xl mx-auto p-4">
         <!-- Error Alert -->
-        <div id="error-box" class="hidden bg-red-50 border border-red-200 text-red-600 p-4 rounded-2xl mb-6 flex gap-2 animate-bounce">
+        <div id="error-box" class="hidden bg-red-50 border border-red-200 text-red-600 p-4 rounded-2xl mb-6 flex gap-2">
             <i data-lucide="info" class="w-5 h-5 mt-0.5 flex-shrink-0"></i>
             <span id="error-message" class="text-sm"></span>
         </div>
@@ -118,7 +137,7 @@
                     <i data-lucide="shopping-cart" class="w-4 h-4"></i> 采购单
                 </button>
                 <button onclick="setTab('steps')" id="tab-steps" class="flex-1 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all text-slate-400">
-                    <i data-lucide="chef-hat" class="w-4 h-4"></i> 烹饪步骤
+                    <i data-lucide="chef-hat" class="w-4 h-4"></i> 制作流程
                 </button>
             </div>
 
@@ -139,19 +158,30 @@
         const API_URL = "https://api.siliconflow.cn/v1/chat/completions";
         const MODEL_NAME = "deepseek-ai/DeepSeek-V3";
 
-        const CUISINE_STYLES = ["不限", "川菜", "粤菜", "湘菜", "鲁菜", "苏菜", "浙菜", "闽菜", "徽菜", "日式", "韩式", "泰式", "西餐", "意式", "法式"];
+        // 重新排序：粤菜第一，创意菜第二
+        const CUISINE_STYLES = ["粤菜", "创意菜", "不限", "川菜", "湘菜", "鲁菜", "苏菜", "浙菜", "闽菜", "徽菜", "日式", "韩式", "泰式", "西餐"];
+        
         const DIETARY_STYLES = [
-            { id: 'hbp', name: "高血压养生" }, { id: 'heavy', name: "重口味(麻辣)" },
+            { id: 'hbp', name: "高血压养生" }, { id: 'heavy', name: "重口味" },
             { id: 'light', name: "清淡饮食" }, { id: 'seafood', name: "海鲜大餐" },
             { id: 'veggie', name: "全素食" }, { id: 'fitness', name: "减脂塑形" },
             { id: 'kids', name: "儿童营养" }, { id: 'keto', name: "低碳饮食" },
             { id: 'warm', name: "温补养生" }, { id: 'quick', name: "快手菜" }
         ];
 
+        // 煲汤20种症状/滋补选择
+        const SOUP_SYMPTOMS = [
+            "上火清热", "湿热困重", "补益气血", "补肾强身", "滋阴润燥", 
+            "美颜护肤", "润肺止咳", "健脾开胃", "宁心安神", "护肝明目", 
+            "驱寒暖胃", "祛湿通络", "利尿排毒", "通乳补身", "经期调理", 
+            "术后康复", "强筋健骨", "补脑益智", "舒压解郁", "四季平安"
+        ];
+
         // --- State Management ---
         let currentMode = 'search';
-        let currentCuisine = '不限';
+        let currentCuisine = '粤菜';
         let currentDietary = DIETARY_STYLES[0];
+        let currentSoupSymptom = '上火清热';
         let history = JSON.parse(localStorage.getItem('recipe_history') || '[]');
         let detailCache = JSON.parse(localStorage.getItem('recipe_details_cache') || '{}');
 
@@ -159,29 +189,27 @@
         window.onload = () => {
             renderCuisines();
             renderDietaryOptions();
+            renderSoupOptions();
             renderHistoryList();
+            updateSeasonalInfo();
             lucide.createIcons();
         };
 
-        // --- Persistence Helpers ---
-        function saveToHistory(type, query, data) {
-            const entry = { id: Date.now(), type, query, data, time: new Date().toLocaleString() };
-            history = [entry, ...history.slice(0, 9)];
-            localStorage.setItem('recipe_history', JSON.stringify(history));
-            renderHistoryList();
-        }
-
-        function clearAllHistory() {
-            history = [];
-            localStorage.removeItem('recipe_history');
-            renderHistoryList();
+        function updateSeasonalInfo() {
+            const month = new Date().getMonth() + 1;
+            let seasonText = "";
+            if (month >= 3 && month <= 5) seasonText = "春季祛湿精选";
+            else if (month >= 6 && month <= 8) seasonText = "夏季清暑精选";
+            else if (month >= 9 && month <= 11) seasonText = "秋季润燥精选";
+            else seasonText = "冬季温补精选";
+            document.getElementById('seasonal-badge').innerText = seasonText;
         }
 
         // --- UI Rendering ---
         function renderCuisines() {
             const container = document.getElementById('cuisine-list');
             container.innerHTML = CUISINE_STYLES.map(s => `
-                <button onclick="setCuisine('${s}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold transition-all ${s === currentCuisine ? 'bg-white text-orange-600 shadow-sm' : 'bg-orange-600 text-orange-100'}">
+                <button onclick="setCuisine('${s}')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${s === currentCuisine ? 'bg-white text-orange-600 border-white shadow-sm' : 'bg-orange-600/50 border-orange-400 text-white'}">
                     ${s}
                 </button>
             `).join('');
@@ -190,88 +218,52 @@
         function renderDietaryOptions() {
             const container = document.getElementById('dietary-list');
             container.innerHTML = DIETARY_STYLES.map(s => `
-                <button onclick="setDietary('${s.id}')" class="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${s.id === currentDietary.id ? 'bg-white text-orange-600 border-white shadow-sm' : 'bg-orange-600/50 border-orange-400 text-white'}">
+                <button onclick="setDietary('${s.id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${s.id === currentDietary.id ? 'bg-white text-orange-600 border-white shadow-sm' : 'bg-orange-600/50 border-orange-400 text-white'}">
                     ${s.name}
                 </button>
             `).join('');
         }
 
-        function renderHistoryList() {
-            const container = document.getElementById('history-list');
-            const view = document.getElementById('history-view');
-            if (history.length === 0) {
-                view.classList.add('hidden');
-                return;
-            }
-            view.classList.remove('hidden');
-            container.innerHTML = history.map(item => `
-                <div onclick="restoreHistory(${item.id})" class="bg-white p-3 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm active:bg-slate-50">
-                    <div class="flex flex-col">
-                        <span class="text-[9px] font-black text-orange-500 uppercase tracking-tighter">${item.type === 'search' ? '搜索' : '方案'}</span>
-                        <span class="text-sm font-bold text-slate-700">${item.query}</span>
-                    </div>
-                    <span class="text-[10px] text-slate-300">${item.time.split(' ')[0]}</span>
-                </div>
+        function renderSoupOptions() {
+            const container = document.getElementById('soup-list');
+            container.innerHTML = SOUP_SYMPTOMS.map(s => `
+                <button onclick="setSoupSymptom('${s}')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${s === currentSoupSymptom ? 'bg-white text-orange-600 border-white shadow-sm' : 'bg-orange-600/50 border-orange-400 text-white'}">
+                    ${s}
+                </button>
             `).join('');
         }
 
-        function restoreHistory(id) {
-            const item = history.find(h => h.id === id);
-            if (!item) return;
-            setMode(item.type);
-            if (item.type === 'search') {
-                renderRecipeList(item.data, false);
-            } else {
-                renderDailyPlan(item.data, false);
-            }
-        }
-
-        // --- Logic Handlers ---
+        // --- Mode & State Logic ---
         function setMode(mode) {
             currentMode = mode;
-            document.getElementById('btn-mode-search').className = `px-2.5 py-1.5 rounded-md transition-all ${mode === 'search' ? 'bg-white text-orange-600 shadow-sm font-bold' : 'text-white'}`;
-            document.getElementById('btn-mode-daily').className = `px-2.5 py-1.5 rounded-md transition-all ${mode === 'daily' ? 'bg-white text-orange-600 shadow-sm font-bold' : 'text-white'}`;
+            document.getElementById('btn-mode-search').className = `px-2 py-1.5 rounded-md transition-all ${mode === 'search' ? 'bg-white text-orange-600 shadow-sm font-bold' : 'text-white'}`;
+            document.getElementById('btn-mode-daily').className = `px-2 py-1.5 rounded-md transition-all ${mode === 'daily' ? 'bg-white text-orange-600 shadow-sm font-bold' : 'text-white'}`;
+            document.getElementById('btn-mode-soup').className = `px-2 py-1.5 rounded-md transition-all ${mode === 'soup' ? 'bg-white text-orange-600 shadow-sm font-bold' : 'text-white'}`;
+            
             document.getElementById('section-search').classList.toggle('hidden', mode !== 'search');
             document.getElementById('section-daily').classList.toggle('hidden', mode !== 'daily');
+            document.getElementById('section-soup').classList.toggle('hidden', mode !== 'soup');
+            
             clearResults();
             renderHistoryList();
         }
 
-        function setCuisine(style) { currentCuisine = style; renderCuisines(); }
+        function setCuisine(s) { currentCuisine = s; renderCuisines(); }
         function setDietary(id) { currentDietary = DIETARY_STYLES.find(s => s.id === id); renderDietaryOptions(); }
+        function setSoupSymptom(s) { currentSoupSymptom = s; renderSoupOptions(); }
 
-        function clearResults() {
-            document.getElementById('result-list').innerHTML = '';
-            document.getElementById('daily-container').innerHTML = '';
-            document.getElementById('daily-container').classList.add('hidden');
-            document.getElementById('result-list').classList.remove('hidden');
-            document.getElementById('welcome-view').classList.remove('hidden');
-            document.getElementById('detail-view').classList.add('hidden');
-            document.getElementById('error-box').classList.add('hidden');
-        }
-
-        // --- API Implementation ---
-        async function callDeepSeek(messages) {
-            showLoading(true);
-            document.getElementById('error-box').classList.add('hidden');
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: MODEL_NAME, messages: messages, response_format: { type: "json_object" } })
-                });
-                if (!response.ok) throw new Error('网络繁忙，请稍后再试');
-                const data = await response.json();
-                return JSON.parse(data.choices[0].message.content);
-            } catch (err) {
-                showError(err.message);
-                return null;
-            } finally {
-                showLoading(false);
+        document.getElementById('soup-generate-btn').onclick = async () => {
+            const result = await callDeepSeek([
+                { role: "system", content: "你是一位资深的广东煲汤专家。根据症状或需求推荐10种正宗广东老火靓汤。返回纯JSON。" },
+                { role: "user", content: `需求: ${currentSoupSymptom}。季节: ${document.getElementById('seasonal-badge').innerText}。提供10种汤名及简介。格式: { "recipes": [ { "name": "汤名", "description": "功效简介" } ] }` }
+            ]);
+            if (result) {
+                saveToHistory('soup', `${currentSoupSymptom}`, result.recipes);
+                renderRecipeList(result.recipes);
             }
-        }
+        };
 
-        // --- Actions ---
+        // --- Core Functions ---
         async function getRecipeList() {
             const input = document.getElementById('input-ingredient');
             const ingredient = input.value.trim();
@@ -303,9 +295,10 @@
                 renderDetails(recipeName, detailCache[recipeName]);
                 return;
             }
+            const isSoup = currentMode === 'soup';
             const result = await callDeepSeek([
-                { role: "system", content: "你是一个大厨和采购专家。返回详细采购单、挑选技巧和步骤。返回纯JSON。" },
-                { role: "user", content: `菜名: ${recipeName}。格式: { "ingredients": [{"name": "...", "amount": "...", "price": "...", "pickTip": "..."}], "totalCost": "...", "steps": [...], "tips": "..." }` }
+                { role: "system", content: `你是一个${isSoup ? '煲汤专家' : '大厨'}和采购专家。返回详细采购单、挑选技巧和${isSoup ? '煲汤' : '烹饪'}步骤。返回纯JSON。` },
+                { role: "user", content: `菜/汤名: ${recipeName}。格式: { "ingredients": [{"name": "...", "amount": "...", "price": "...", "pickTip": "..."}], "totalCost": "...", "steps": [...], "tips": "..." }` }
             ]);
             if (result) {
                 detailCache[recipeName] = result;
@@ -314,17 +307,17 @@
             }
         }
 
-        // --- UI Rendering logic ---
-        function renderRecipeList(recipes, animate = true) {
+        // --- Render Helpers ---
+        function renderRecipeList(recipes) {
             clearResults();
             document.getElementById('welcome-view').classList.add('hidden');
             document.getElementById('history-view').classList.add('hidden');
             const container = document.getElementById('result-list');
             container.innerHTML = recipes.map(r => `
-                <div onclick="getDetails('${r.name}')" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 active:border-orange-300 active:bg-orange-50 transition-all cursor-pointer group flex justify-between items-center">
+                <div onclick="getDetails('${r.name}')" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 active:border-orange-300 active:bg-orange-50 transition-all cursor-pointer flex justify-between items-center">
                     <div class="min-w-0 pr-2">
-                        <h3 class="font-bold text-slate-800 truncate">${r.name}</h3>
-                        <p class="text-slate-500 text-xs mt-1 line-clamp-1">${r.description}</p>
+                        <h3 class="font-bold text-slate-800 truncate text-sm">${r.name}</h3>
+                        <p class="text-slate-500 text-[10px] mt-1 line-clamp-1">${r.description}</p>
                     </div>
                     <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 flex-shrink-0"></i>
                 </div>
@@ -332,7 +325,7 @@
             lucide.createIcons();
         }
 
-        function renderDailyPlan(plan, animate = true) {
+        function renderDailyPlan(plan) {
             clearResults();
             document.getElementById('welcome-view').classList.add('hidden');
             document.getElementById('history-view').classList.add('hidden');
@@ -343,7 +336,7 @@
                     <div class="flex items-center gap-3 min-w-0">
                         <span class="text-[9px] font-black text-orange-500 w-8 text-center flex-shrink-0">${item.meal}</span>
                         <div class="min-w-0">
-                            <h3 class="font-bold text-slate-800 truncate">${item.name}</h3>
+                            <h3 class="font-bold text-slate-800 truncate text-sm">${item.name}</h3>
                             <p class="text-slate-500 text-[10px] mt-0.5 truncate">${item.description}</p>
                         </div>
                     </div>
@@ -362,15 +355,17 @@
             document.getElementById('detail-view').classList.remove('hidden');
             
             document.getElementById('detail-title').innerText = name;
-            document.getElementById('detail-subtitle').innerText = currentMode === 'search' ? `${currentCuisine} / DEEPSEEK` : `${currentDietary.name} / 一日三餐`;
+            let sub = "";
+            if(currentMode === 'search') sub = `${currentCuisine} / DEEPSEEK`;
+            else if(currentMode === 'daily') sub = `${currentDietary.name} / 一日三餐`;
+            else sub = `${currentSoupSymptom} / 广东汤谱`;
+            document.getElementById('detail-subtitle').innerText = sub;
 
             document.getElementById('tab-content-ingredients').innerHTML = `
                 <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-100">
                     <div class="bg-slate-50 p-5 border-b border-slate-100 flex justify-between items-center">
                         <h2 class="font-black text-slate-800">大概预算</h2>
-                        <div class="flex items-center gap-1 text-orange-600 font-black text-xl">
-                             ${data.totalCost}
-                        </div>
+                        <div class="flex items-center gap-1 text-orange-600 font-black text-xl">${data.totalCost}</div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full">
@@ -403,37 +398,35 @@
                 <div class="space-y-6">
                     ${data.steps.map((step, i) => `
                         <div class="flex gap-4">
-                            <div class="flex-shrink-0 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-[10px]">
-                                ${i + 1}
-                            </div>
-                            <div class="text-slate-700 text-sm leading-relaxed pb-4 border-b border-slate-50 w-full">
-                                ${step}
-                            </div>
+                            <div class="flex-shrink-0 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-[10px]">${i + 1}</div>
+                            <div class="text-slate-700 text-sm leading-relaxed pb-4 border-b border-slate-50 w-full">${step}</div>
                         </div>
                     `).join('')}
-                    ${data.tips ? `
-                        <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3 mt-4">
-                            <span class="text-lg">💡</span>
-                            <p class="text-amber-900 text-xs leading-relaxed italic"><strong>大厨贴士：</strong>${data.tips}</p>
-                        </div>
-                    ` : ''}
+                    ${data.tips ? `<div class="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3 mt-4"><span class="text-lg">💡</span><p class="text-amber-900 text-xs leading-relaxed italic"><strong>特别建议：</strong>${data.tips}</p></div>` : ''}
                 </div>
             `;
-
             setTab('ingredients');
             lucide.createIcons();
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- General Utilities ---
+        function clearResults() {
+            document.getElementById('result-list').innerHTML = '';
+            document.getElementById('daily-container').innerHTML = '';
+            document.getElementById('daily-container').classList.add('hidden');
+            document.getElementById('result-list').classList.remove('hidden');
+            document.getElementById('welcome-view').classList.remove('hidden');
+            document.getElementById('detail-view').classList.add('hidden');
+            document.getElementById('error-box').classList.add('hidden');
         }
 
         function closeDetails() {
             document.getElementById('header-main').classList.remove('hidden');
             document.getElementById('header-detail').classList.add('hidden');
             document.getElementById('detail-view').classList.add('hidden');
-            if (currentMode === 'search') {
-                document.getElementById('result-list').classList.remove('hidden');
-            } else {
-                document.getElementById('daily-container').classList.remove('hidden');
-            }
+            if (currentMode === 'search' || currentMode === 'soup') document.getElementById('result-list').classList.remove('hidden');
+            else document.getElementById('daily-container').classList.remove('hidden');
         }
 
         function setTab(tab) {
@@ -442,6 +435,54 @@
             document.getElementById('tab-steps').className = `flex-1 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all ${!isIng ? 'bg-orange-500 text-white shadow-md' : 'text-slate-400'}`;
             document.getElementById('tab-content-ingredients').classList.toggle('hidden', !isIng);
             document.getElementById('tab-content-steps').classList.toggle('hidden', isIng);
+        }
+
+        async function callDeepSeek(messages) {
+            showLoading(true);
+            document.getElementById('error-box').classList.add('hidden');
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: MODEL_NAME, messages: messages, response_format: { type: "json_object" } })
+                });
+                if (!response.ok) throw new Error('网络繁忙，请稍后再试');
+                const data = await response.json();
+                return JSON.parse(data.choices[0].message.content);
+            } catch (err) {
+                showError(err.message);
+                return null;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function saveToHistory(type, query, data) {
+            const entry = { id: Date.now(), type, query, data, time: new Date().toLocaleString() };
+            history = [entry, ...history.slice(0, 9)];
+            localStorage.setItem('recipe_history', JSON.stringify(history));
+            renderHistoryList();
+        }
+
+        function renderHistoryList() {
+            const container = document.getElementById('history-list');
+            const view = document.getElementById('history-view');
+            if (history.length === 0) { view.classList.add('hidden'); return; }
+            view.classList.remove('hidden');
+            container.innerHTML = history.map(item => `
+                <div onclick="restoreHistory(${item.id})" class="bg-white p-3 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm active:bg-slate-50">
+                    <div class="flex flex-col"><span class="text-[8px] font-black text-orange-500 uppercase tracking-tighter">${item.type === 'search' ? '搜索' : item.type === 'soup' ? '煲汤' : '方案'}</span><span class="text-xs font-bold text-slate-700">${item.query}</span></div>
+                    <span class="text-[9px] text-slate-300">${item.time.split(' ')[0]}</span>
+                </div>
+            `).join('');
+        }
+
+        function restoreHistory(id) {
+            const item = history.find(h => h.id === id);
+            if (!item) return;
+            setMode(item.type);
+            if (item.type === 'daily') renderDailyPlan(item.data);
+            else renderRecipeList(item.data);
         }
 
         function showLoading(show) {
@@ -459,6 +500,12 @@
             document.getElementById('error-box').classList.remove('hidden');
             document.getElementById('error-message').innerText = msg;
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function clearAllHistory() {
+            history = [];
+            localStorage.removeItem('recipe_history');
+            renderHistoryList();
         }
     </script>
 </body>
