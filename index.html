@@ -11,11 +11,47 @@
         body { 
             font-family: 'Noto Sans SC', sans-serif; 
             -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
         }
         .loader { border-top-color: #f97316; animation: spinner 1.5s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         button:active { transform: scale(0.98); }
+
+        /* 左滑删除样式 */
+        .history-item-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.75rem;
+            touch-action: pan-y;
+        }
+        .delete-background {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 1.5rem;
+            color: white;
+            z-index: 1;
+        }
+        .history-item-content {
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            background-color: white;
+        }
+        .history-item-content.no-transition {
+            transition: none;
+        }
+        .history-item-content.deleting {
+            transform: translateX(-120%) !important;
+            transition: transform 0.4s ease-in;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 pb-20">
@@ -41,9 +77,7 @@
                         <p class="text-[10px] font-bold opacity-80 flex items-center gap-1 uppercase tracking-wider">
                             <i data-lucide="globe" class="w-3 h-3"></i> 菜系选择
                         </p>
-                        <div class="flex flex-wrap gap-2" id="cuisine-list">
-                            <!-- JS 注入 -->
-                        </div>
+                        <div class="flex flex-wrap gap-2" id="cuisine-list"></div>
                     </div>
                     <div class="flex items-center gap-2 bg-white rounded-full p-1 shadow-md border border-orange-100 w-full">
                         <input type="text" id="input-ingredient" placeholder="想吃什么主料？" class="flex-1 min-w-0 px-3 py-2 rounded-full text-slate-800 outline-none text-sm">
@@ -59,9 +93,7 @@
                         <p class="text-[10px] font-bold opacity-80 flex items-center gap-1 uppercase tracking-wider">
                             <i data-lucide="calendar" class="w-3 h-3"></i> 饮食目标
                         </p>
-                        <div class="flex flex-wrap gap-2" id="dietary-list">
-                            <!-- JS 注入 -->
-                        </div>
+                        <div class="flex flex-wrap gap-2" id="dietary-list"></div>
                     </div>
                     <button onclick="getDailyPlan()" class="w-full bg-white text-orange-600 font-black py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2">
                         <i data-lucide="sparkles" class="w-5 h-5"></i>
@@ -78,9 +110,7 @@
                             </p>
                             <span id="seasonal-badge" class="text-[9px] bg-white text-orange-600 px-2 py-0.5 rounded font-black"></span>
                         </div>
-                        <div class="flex flex-wrap gap-2" id="soup-list">
-                            <!-- JS 注入 -->
-                        </div>
+                        <div class="flex flex-wrap gap-2" id="soup-list"></div>
                     </div>
                     <button id="soup-generate-btn" class="w-full bg-white text-orange-600 font-black py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2">
                         <i data-lucide="droplet" class="w-5 h-5"></i>
@@ -124,7 +154,7 @@
         <!-- History View -->
         <div id="history-view" class="hidden space-y-4 mt-4">
             <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <i data-lucide="history" class="w-3 h-3"></i> 最近查看
+                <i data-lucide="history" class="w-3 h-3"></i> 最近查看 (左滑删除)
             </h3>
             <div id="history-list" class="space-y-3"></div>
             <button onclick="clearAllHistory()" class="text-[10px] text-slate-300 mx-auto block hover:text-red-400 py-2">清除所有记录</button>
@@ -158,9 +188,7 @@
         const API_URL = "https://api.siliconflow.cn/v1/chat/completions";
         const MODEL_NAME = "deepseek-ai/DeepSeek-V3";
 
-        // 重新排序：粤菜第一，创意菜第二
         const CUISINE_STYLES = ["粤菜", "创意菜", "不限", "川菜", "湘菜", "鲁菜", "苏菜", "浙菜", "闽菜", "徽菜", "日式", "韩式", "泰式", "西餐"];
-        
         const DIETARY_STYLES = [
             { id: 'hbp', name: "高血压养生" }, { id: 'heavy', name: "重口味" },
             { id: 'light', name: "清淡饮食" }, { id: 'seafood', name: "海鲜大餐" },
@@ -168,8 +196,6 @@
             { id: 'kids', name: "儿童营养" }, { id: 'keto', name: "低碳饮食" },
             { id: 'warm', name: "温补养生" }, { id: 'quick', name: "快手菜" }
         ];
-
-        // 煲汤20种症状/滋补选择
         const SOUP_SYMPTOMS = [
             "上火清热", "湿热困重", "补益气血", "补肾强身", "滋阴润燥", 
             "美颜护肤", "润肺止咳", "健脾开胃", "宁心安神", "护肝明目", 
@@ -233,17 +259,104 @@
             `).join('');
         }
 
+        // --- History List with Swipe to Delete ---
+        function renderHistoryList() {
+            const container = document.getElementById('history-list');
+            const view = document.getElementById('history-view');
+            if (history.length === 0) { view.classList.add('hidden'); return; }
+            view.classList.remove('hidden');
+            
+            container.innerHTML = '';
+            history.forEach(item => {
+                const itemWrapper = document.createElement('div');
+                itemWrapper.className = 'history-item-container shadow-sm';
+                
+                itemWrapper.innerHTML = `
+                    <div class="delete-background">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </div>
+                    <div class="history-item-content bg-white p-3 border border-slate-100 flex justify-between items-center rounded-xl" id="content-${item.id}">
+                        <div class="flex flex-col">
+                            <span class="text-[8px] font-black text-orange-500 uppercase tracking-tighter">${item.type === 'search' ? '搜索' : item.type === 'soup' ? '煲汤' : '方案'}</span>
+                            <span class="text-xs font-bold text-slate-700">${item.query}</span>
+                        </div>
+                        <span class="text-[9px] text-slate-300">${item.time.split(' ')[0]}</span>
+                    </div>
+                `;
+
+                const content = itemWrapper.querySelector('.history-item-content');
+                let startX = 0;
+                let currentTranslateX = 0;
+                let isDragging = false;
+
+                content.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    content.classList.add('no-transition');
+                    isDragging = true;
+                }, { passive: true });
+
+                content.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    const deltaX = e.touches[0].clientX - startX;
+                    if (deltaX < 0) { // 仅允许左滑
+                        currentTranslateX = deltaX;
+                        // 纵向滚动阻尼（简单的防误触）
+                        if (Math.abs(deltaX) > 10) {
+                            content.style.transform = `translateX(${deltaX}px)`;
+                        }
+                    }
+                }, { passive: true });
+
+                content.addEventListener('touchend', () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    content.classList.remove('no-transition');
+                    
+                    const threshold = itemWrapper.offsetWidth / 4;
+                    if (currentTranslateX < -threshold) {
+                        // 触发删除动画
+                        content.classList.add('deleting');
+                        setTimeout(() => deleteHistoryItem(item.id), 300);
+                    } else {
+                        // 弹回
+                        content.style.transform = `translateX(0px)`;
+                    }
+                    currentTranslateX = 0;
+                });
+
+                // 点击事件（仅在未滑动时触发）
+                content.addEventListener('click', () => {
+                    if (Math.abs(currentTranslateX) < 5) {
+                        restoreHistory(item.id);
+                    }
+                });
+
+                container.appendChild(itemWrapper);
+            });
+            lucide.createIcons();
+        }
+
+        function deleteHistoryItem(id) {
+            history = history.filter(h => h.id !== id);
+            localStorage.setItem('recipe_history', JSON.stringify(history));
+            renderHistoryList();
+        }
+
+        function clearAllHistory() {
+            history = [];
+            localStorage.removeItem('recipe_history');
+            renderHistoryList();
+        }
+
         // --- Mode & State Logic ---
         function setMode(mode) {
             currentMode = mode;
             document.getElementById('btn-mode-search').className = `px-2 py-1.5 rounded-md transition-all ${mode === 'search' ? 'bg-white text-orange-600 shadow-sm font-bold' : 'text-white'}`;
             document.getElementById('btn-mode-daily').className = `px-2 py-1.5 rounded-md transition-all ${mode === 'daily' ? 'bg-white text-orange-600 shadow-sm font-bold' : 'text-white'}`;
             document.getElementById('btn-mode-soup').className = `px-2 py-1.5 rounded-md transition-all ${mode === 'soup' ? 'bg-white text-orange-600 shadow-sm font-bold' : 'text-white'}`;
-            
             document.getElementById('section-search').classList.toggle('hidden', mode !== 'search');
             document.getElementById('section-daily').classList.toggle('hidden', mode !== 'daily');
             document.getElementById('section-soup').classList.toggle('hidden', mode !== 'soup');
-            
             clearResults();
             renderHistoryList();
         }
@@ -464,19 +577,6 @@
             renderHistoryList();
         }
 
-        function renderHistoryList() {
-            const container = document.getElementById('history-list');
-            const view = document.getElementById('history-view');
-            if (history.length === 0) { view.classList.add('hidden'); return; }
-            view.classList.remove('hidden');
-            container.innerHTML = history.map(item => `
-                <div onclick="restoreHistory(${item.id})" class="bg-white p-3 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm active:bg-slate-50">
-                    <div class="flex flex-col"><span class="text-[8px] font-black text-orange-500 uppercase tracking-tighter">${item.type === 'search' ? '搜索' : item.type === 'soup' ? '煲汤' : '方案'}</span><span class="text-xs font-bold text-slate-700">${item.query}</span></div>
-                    <span class="text-[9px] text-slate-300">${item.time.split(' ')[0]}</span>
-                </div>
-            `).join('');
-        }
-
         function restoreHistory(id) {
             const item = history.find(h => h.id === id);
             if (!item) return;
@@ -500,12 +600,6 @@
             document.getElementById('error-box').classList.remove('hidden');
             document.getElementById('error-message').innerText = msg;
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function clearAllHistory() {
-            history = [];
-            localStorage.removeItem('recipe_history');
-            renderHistoryList();
         }
     </script>
 </body>
